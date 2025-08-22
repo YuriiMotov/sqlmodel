@@ -259,6 +259,8 @@ def Field(
             """
         )
     ] = None,
+    json_schema_extra: Optional[Dict[str, Any]] = None,
+    pydantic_kwargs: Optional[Dict[str, Any]] = None,
 ) -> Any: ...
 
 
@@ -315,6 +317,8 @@ def Field(
             """
         )
     ] = None,
+    json_schema_extra: Optional[Dict[str, Any]] = None,
+    pydantic_kwargs: Optional[Dict[str, Any]] = None,
 ) -> Any: ...
 
 
@@ -371,6 +375,8 @@ def Field(
             """
         )
     ] = None,
+    json_schema_extra: Optional[Dict[str, Any]] = None,
+    pydantic_kwargs: Optional[Dict[str, Any]] = None,
 ) -> Any: ...
 
 
@@ -426,8 +432,18 @@ def Field(
             """
         )
     ] = None,
+    json_schema_extra: Optional[Dict[str, Any]] = None,
+    pydantic_kwargs: Optional[Dict[str, Any]] = None,
 ) -> Any:
+    if schema_extra and (json_schema_extra or pydantic_kwargs):
+        raise RuntimeError(
+            "Passing schema_extra is not supported when "
+            "also passing a json_schema_extra"
+        )
+    current_pydantic_kwargs = pydantic_kwargs or {}
     current_schema_extra = schema_extra or {}
+    if json_schema_extra:
+        current_schema_extra["json_schema_extra"] = json_schema_extra
     field_info = FieldInfo(
         default,
         default_factory=default_factory,
@@ -463,6 +479,7 @@ def Field(
         sa_column=sa_column,
         sa_column_args=sa_column_args,
         sa_column_kwargs=sa_column_kwargs,
+        **current_pydantic_kwargs,
         **current_schema_extra,
     )
     post_init_field_info(field_info)

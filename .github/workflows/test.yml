@@ -16,15 +16,16 @@ on:
         default: 'false'
   schedule:
     # cron every week on monday
-    - cron: "0 0 * * 2"
+    - cron: "0 0 * * 3"
 
 env:
   UV_SYSTEM_PYTHON: 1
+  # Run scheduled jobs only on the main repository (disable cron on forks)
+  RUN_CONDITION: ${{ github.repository_owner == 'fastapi' || github.event_name != 'schedule' }}
 
 jobs:
   test:
-    # Run scheduled jobs only on the main repository (disable cron on forks)
-    if: github.repository_owner == 'fastapi' || github.event_name != 'schedule'
+    if: ${{ env.RUN_CONDITION }}
     strategy:
       matrix:
         os: [ ubuntu-latest, windows-latest, macos-latest ]
@@ -137,7 +138,7 @@ jobs:
 
   # https://github.com/marketplace/actions/alls-green#why
   alls-green:  # This job does nothing and is only used for the branch protection
-    if: always()
+    if: always() && env.RUN_CONDITION
     needs:
       - coverage-combine
     runs-on: ubuntu-latest
